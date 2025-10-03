@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <title>User Interface</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-8 bg-slate-200 select-none">
+
+    <div class="w-max mx-auto mt-12">
+
+        <div class="my-12 flex">
+            <div id="btnCache" class="mx-5 w-[88px] h-[88px] bg-orange-500 drop-shadow-lg hover:bg-orange-500 active:bg-orange-400 duration-100 rounded-[36px] cursor-pointer flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-dumpster text-slate-50"></i>
+            </div>
+            <div class="drop-shadow-xl">
+                <p class="text-2xl font-medium">Clear cache</p>
+                <p class="text-md w-[350px]">App caches (e.g., browsers, editors, etc.).</p>
+            </div>
+        </div>
+
+        <div class="my-12 flex">
+            <div id="btnDonwload" onclick="notification('Not avaible yet', 'bg-rose-600')" class="mx-5 w-[88px] h-[88px] bg-orange-500 drop-shadow-lg hover:bg-orange-500 active:bg-orange-400 duration-100 rounded-[36px] cursor-pointer flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-download text-slate-50"></i>
+            </div>
+            <div class="drop-shadow-xl">
+                <p class="text-2xl font-medium">Erase downloads</p>
+                <p class="text-md w-[350px]">You might want to delete files older than a certain amount of days.</p>
+            </div>
+        </div>
+
+        <div class="my-12 flex">
+            <div id="btnLogs" onclick="notification('Not avaible yet', 'bg-rose-600')" class="mx-5 w-[88px] h-[88px] bg-orange-500 drop-shadow-lg hover:bg-orange-500 active:bg-orange-400 duration-100 rounded-[36px] cursor-pointer flex items-center justify-center text-2xl">
+                <i class="fa-solid fa-delete-left text-slate-50"></i>
+            </div>
+            <div class="drop-shadow-xl">
+                <p class="text-2xl font-medium">Delete system logs</p>
+                <p class="text-md w-[350px]">These are system logs that rotate automatically, but you can clean old ones.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="main.js"></script>
+    <script src="notification.js"></script>
+    <script src="https://kit.fontawesome.com/fd76f39cb8.js" crossorigin="anonymous"></script>
+</body>
+</html>
