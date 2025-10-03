@@ -7,7 +7,7 @@ class API:
         print("@Developer: " + text)
 
     def cache(self):
-        print("CLEARING CACHE")
+        print("CLEARING SYSTEM CACHE")
         count = 0
         # cache_dir diventa il nostro percorso grazie a os.path.expander che aggiunge la home directory.
         cache_dir = os.path.expanduser("~/Library/Caches")
@@ -30,8 +30,39 @@ class API:
                 # Se saltiamo un file o una directory per qualsiasi motivo, stampiamo quale.
                 count += 1
                 print("(SKIP) ", path, e)
-                execfu = "notification('Cache directory cleared with success (" + str(count) + " skipped)', 'bg-teal-600')"
-                window.evaluate_js(execfu)
+        execfu = "notification('Cache directory cleared with success (" + str(count) + " skipped)', 'bg-teal-600')"
+        window.evaluate_js(execfu)
+
+    def logs(self):
+        log_paths = [
+            os.path.expanduser("~/Library/Logs"),   # utente
+            "/Library/Logs",                        # sistema
+            "/private/var/log"                      # log principali
+        ]
+        for logs_dir in log_paths:
+            print("Checking:", logs_dir)
+            if not os.path.exists(logs_dir):
+                print("Cartella non trovata:", logs_dir)
+                continue
+            items = os.listdir(logs_dir)
+            if not items:
+                print("Cartella vuota:", logs_dir)
+                continue
+            for item in items:
+                path = os.path.join(logs_dir, item)
+                try:
+                    if os.path.isfile(path):
+                        os.remove(path)
+                        print("(OS.REMOVE)", path)
+                    else:
+                        shutil.rmtree(path)
+                        print("(SHUTIL.RMTREE)", path)
+                except Exception as e:
+                    print("(SKIP)", path, e)
+        execfu = "notification('Logs cleared with success', 'bg-teal-600')"
+        window.evaluate_js(execfu)
+
+
 
 # Webview
 if __name__ == "__main__":
