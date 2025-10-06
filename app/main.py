@@ -6,8 +6,8 @@ class API:
     def terminal(self, text):
         print("@Developer: " + text)
 
+
     def clearPath(self, text: str):
-        # Definisci i percorsi
         paths = {
             "logs": [
                 os.path.expanduser("~/Library/Logs"),
@@ -16,10 +16,12 @@ class API:
             ],
             "cache": [
                 os.path.expanduser("~/Library/Caches")
+            ],
+            "downloads": [
+                os.path.expanduser("~/Downloads")
             ]
         }
 
-        # Normalizza e verifica input
         text = text.strip().lower()
         if text not in paths:
             print(f"[ERRORE] Argomento non valido: {text}")
@@ -50,9 +52,11 @@ class API:
         msg = f"{text.capitalize()} cleared: {removed_count} items removed"
         print(msg)
 
-        # Mostra notifica nel frontend
-        execfu = f"notification('{msg}', 'bg-teal-600')"
-        window.evaluate_js(execfu)
+        try:
+            execfu = f"notification('{msg}', 'bg-teal-600')"
+            window.evaluate_js(execfu)
+        except Exception as e:
+            print(f"[INFO] Notification skipped: {e}")
 
 
 

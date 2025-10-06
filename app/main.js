@@ -5,3 +5,7 @@ document.getElementById("btnCache").addEventListener("click", async() => {
 document.getElementById("btnLogs").addEventListener("click", async() => {
     await window.pywebview.api.clearPath("logs");
 });
+
+document.getElementById("btnDonwload").addEventListener("click", async() => {
+    await window.pywebview.api.clearPath("downloads");
+});
