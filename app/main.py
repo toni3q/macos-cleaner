@@ -6,60 +6,52 @@ class API:
     def terminal(self, text):
         print("@Developer: " + text)
 
-    def cache(self):
-        print("CLEARING SYSTEM CACHE")
-        count = 0
-        # cache_dir diventa il nostro percorso grazie a os.path.expander che aggiunge la home directory.
-        cache_dir = os.path.expanduser("~/Library/Caches")
-        # Leggiamo i file dentro la cartella tramite os.listdir 
-        for item in os.listdir(cache_dir):
-            # Cambio il nome della cartella con il percorso completo
-            path = os.path.join(cache_dir, item)
-            try:
-                # Verifichiamo se si tratta di un file regolare
-                # Se restituisce false si tratta di una directory o di un'altro non-file.
-                if os.path.isfile(path):
-                    # Andiamo a rimuovere il file, ma solo se non si trova in esecuzione o se abbiamo i permessi.
-                    os.remove(path)
-                    print("(OS.REMOVE) " + path)
-                else:
-                    # Andiamo a rimuovere forzatamente qualsiasi cartella o file target.
-                    shutil.rmtree(path)
-                    print("(SHUTIL.RMTREE) " + path)
-            except Exception as e:
-                # Se saltiamo un file o una directory per qualsiasi motivo, stampiamo quale.
-                count += 1
-                print("(SKIP) ", path, e)
-        execfu = "notification('Cache directory cleared with success (" + str(count) + " skipped)', 'bg-teal-600')"
-        window.evaluate_js(execfu)
+    def clearPath(self, text: str):
+        # Definisci i percorsi
+        paths = {
+            "logs": [
+                os.path.expanduser("~/Library/Logs"),
+                "/Library/Logs",
+                "/private/var/log"
+            ],
+            "cache": [
+                os.path.expanduser("~/Library/Caches")
+            ]
+        }
 
-    def logs(self):
-        log_paths = [
-            os.path.expanduser("~/Library/Logs"),   # utente
-            "/Library/Logs",                        # sistema
-            "/private/var/log"                      # log principali
-        ]
-        for logs_dir in log_paths:
-            print("Checking:", logs_dir)
-            if not os.path.exists(logs_dir):
-                print("Cartella non trovata:", logs_dir)
+        # Normalizza e verifica input
+        text = text.strip().lower()
+        if text not in paths:
+            print(f"[ERRORE] Argomento non valido: {text}")
+            return
+
+        target_dirs = paths[text]
+        removed_count = 0
+
+        for base_dir in target_dirs:
+            if not os.path.exists(base_dir):
+                print(f"(MANCANTE) {base_dir}")
                 continue
-            items = os.listdir(logs_dir)
-            if not items:
-                print("Cartella vuota:", logs_dir)
-                continue
-            for item in items:
-                path = os.path.join(logs_dir, item)
+
+            print(f"Pulizia in corso: {base_dir}")
+
+            for entry in os.scandir(base_dir):
                 try:
-                    if os.path.isfile(path):
-                        os.remove(path)
-                        print("(OS.REMOVE)", path)
-                    else:
-                        shutil.rmtree(path)
-                        print("(SHUTIL.RMTREE)", path)
+                    if entry.is_file():
+                        os.remove(entry.path)
+                        print(f"(REMOVE) {entry.path}")
+                    elif entry.is_dir():
+                        shutil.rmtree(entry.path)
+                        print(f"(RMTREE) {entry.path}")
+                    removed_count += 1
                 except Exception as e:
-                    print("(SKIP)", path, e)
-        execfu = "notification('Logs cleared with success', 'bg-teal-600')"
+                    print(f"(SKIP) {entry.path} -> {e}")
+
+        msg = f"{text.capitalize()} cleared: {removed_count} items removed"
+        print(msg)
+
+        # Mostra notifica nel frontend
+        execfu = f"notification('{msg}', 'bg-teal-600')"
         window.evaluate_js(execfu)
 
 
