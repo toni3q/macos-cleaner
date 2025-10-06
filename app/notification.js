@@ -1,20 +1,31 @@
-function notification(message = '', bgcolor = 'bg-blue-500') {
-    const notification = document.createElement('div');
-    notification.classList.add('z-50', 'popup', 'fixed', 'top-[-100px]', 'left-0', 'w-screen', bgcolor, 'text-lg', 'font-medium', 'text-zinc-50', 'px-6', 'py-4', 'drop-shadow-3xl', 'backdrop-blur-lg', 'dm-sans', 'duration-200');
+function notification(message = '', bgcolor = 'bg-blue-500/80') {
+    const overlay = document.createElement('div');
+    overlay.classList.add(
+        'fixed', 'inset-0', 'z-50',
+        'flex', 'items-center', 'justify-center',
+        'backdrop-blur-md', 'bg-black/40',
+        'opacity-0', 'transition-opacity', 'duration-300'
+    );
 
-    const messageElement = document.createElement('span');
-    messageElement.innerText = message;
-    notification.appendChild(messageElement);
-    document.body.appendChild(notification);
+    const box = document.createElement('div');
+    box.classList.add(
+        'px-8', 'py-6', 'rounded-lg', 'text-center',
+        'text-zinc-50', 'text-2xl', 'font-medium',
+        'bg-white/00', 'shadow-2xl'
+    );
+    box.innerText = message;
 
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    // Fade in
+    requestAnimationFrame(() => {
+        overlay.classList.replace('opacity-0', 'opacity-100');
+    });
+
+    // Fade out after 3s
     setTimeout(() => {
-        notification.style.top = '0';
-    }, 0);
-
-    setTimeout(() => {
-        notification.style.top = '-100px';
-        setTimeout(() => {
-        notification.remove();
-        }, 300);
+        overlay.classList.replace('opacity-100', 'opacity-0');
+        setTimeout(() => overlay.remove(), 300);
     }, 3000);
 }
