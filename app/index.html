@@ -2,16 +2,16 @@
 <html lang="it">
 <head>
     <meta charset="utf-8">
-    <title>User Interface</title>
+    <title>MacOS Cleaner</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="px-8 pt-12 bg-zinc-900 text-zinc-50 select-none">
-
     <div class="w-max h-max mx-auto">
         <div class="mx-auto text-center">
             <p class="text-2xl font-medium">MacOS Cleaner</p>
             <p class="text-sm font-normal leading-5">Open Source, Light weight, Python Cleaner for MacOS.</p>
         </div>
+
         <div class="w-[400px] px-3 pt-2 py-3 border-[1.5px] rounded-[16px] drop-shadow-lg border-zinc-700 mt-8 bg-zinc-800">
             <div class="flex justify-between">
                 <div>
@@ -23,6 +23,7 @@
                 </div>
             </div>
         </div>
+
         <div class="w-[400px] px-3 pt-2 py-3 border-[1.5px] rounded-[16px] drop-shadow-lg border-zinc-700 mt-4 bg-zinc-800">
             <div class="flex justify-between">
                 <div>
@@ -30,10 +31,11 @@
                     <p class="text-sm leading-4">Erase your download files.</p>
                 </div>
                 <div class="my-auto">
-                    <p id="btnDonwload" class="px-2 border-blue-500 bg-blue-600 hover:border-blue-400 hover:bg-blue-500 duration-100 border-[1.5px] py-0.5 rounded-[9px] cursor-pointer">Start</p>
+                    <p id="btnDownload" class="px-2 border-blue-500 bg-blue-600 hover:border-blue-400 hover:bg-blue-500 duration-100 border-[1.5px] py-0.5 rounded-[9px] cursor-pointer">Start</p>
                 </div>
             </div>
         </div>
+
         <div class="w-[400px] px-3 pt-2 py-3 border-[1.5px] rounded-[16px] drop-shadow-lg border-zinc-700 mt-4 bg-zinc-800">
             <div class="flex justify-between">
                 <div>
@@ -45,19 +47,38 @@
                 </div>
             </div>
         </div>
+
+        <div class="w-[400px] px-3 pt-2 py-3 border-[1.5px] rounded-[16px] drop-shadow-lg border-zinc-700 mt-4 bg-zinc-800">
+            <div class="flex justify-between">
+                <div>
+                    <p class="text-md font-medium">Antivirus Scan</p>
+                    <p class="text-sm leading-4">Scan user files for suspicious content.</p>
+                </div>
+                <div class="my-auto">
+                    <p id="btnScan" class="px-2 border-red-500 bg-red-600 hover:border-red-500 duration-100 border-[1.5px] py-0.5 rounded-[9px] cursor-pointer">Start</p>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div class="mx-auto mt-6 w-[400px] bg-zinc-700 rounded-full h-3 overflow-hidden">
+        <div id="progress-bar" class="h-full bg-teal-500 transition-all duration-150" style="width: 0%"></div>
+    </div>
+
+    <div id="status" class="mt-2 mx-auto w-[700px] text-xs text-zinc-400 text-center">Ready to scan.</div>
 
     <div class="fixed bottom-2 left-2 justify-center text-zinc-500">
         <div class="flex justify-center gap-6 mt-2 text-sm">
             <p>CPU: <span id="cpu">--</span>%</p>
             <p>RAM: <span id="ram">--</span>%</p>
             <p>Disk: <span id="disk">--</span>%</p>
+            <!-- Optional temperature -->
             <p>Temp: <span id="temp">--</span>°C</p>
         </div>
     </div>
 
-    <script src="main.js"></script>
-    <script src="notification.js"></script>
+    <script defer src="./main.js"></script>
+    <script defer src="./notification.js"></script>
     <script src="https://kit.fontawesome.com/fd76f39cb8.js" crossorigin="anonymous"></script>
 </body>
 </html>

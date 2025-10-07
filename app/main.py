@@ -3,18 +3,51 @@ import psutil
 import time
 import json
 import webview
-import os
+import os, sys
 import shutil
 import subprocess
 
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from bridge.antivirus_bridge import stream_scan
 
 class API:
     def __init__(self):
         self.window = None
 
+    def start_scan(self):
+        try:
+            if self.window:
+                self.window.evaluate_js("startScanUI()")
+        except Exception as e:
+            print("[WARN] evaluate_js(startScanUI) failed:", e)
+
+        threading.Thread(target=self._run_scan, daemon=True).start()
+
+    def _run_scan(self):
+        def handle_progress(line):
+            try:
+                if line.startswith("#TOTAL"):
+                    total = line.split()[1]
+                    if self.window:
+                        self.window.evaluate_js(f"updateTotal({total})")
+                elif line.startswith("#PROGRESS"):
+                    parts = line.split(" ", 2)
+                    count = parts[1]
+                    file_path = parts[2] if len(parts) > 2 else ""
+                    if self.window:
+                        # escape single quotes in file_path to avoid JS syntax error
+                        safe_path = file_path.replace("'", "\\'")
+                        self.window.evaluate_js(f"updateProgress({count}, '{safe_path}')")
+                elif line.startswith("#DONE"):
+                    if self.window:
+                        self.window.evaluate_js("finishScanUI()")
+            except Exception as e:
+                print("[Monitor handler] exception:", e)
+
+        stream_scan(os.path.expanduser("~"), handle_progress)
+
     def clearPath(self, text: str):
         home = os.path.expanduser("~")
-
         paths = {
             "logs": [
                 f"{home}/Library/Logs",
@@ -51,14 +84,12 @@ class API:
             return
 
         removed_count = 0
-
         for base_dir in target_dirs:
             if not os.path.exists(base_dir):
                 print(f"(MANCANTE) {base_dir}")
                 continue
 
             print(f"Pulizia in corso: {base_dir}")
-
             if base_dir == "/Volumes":
                 for vol in os.listdir("/Volumes"):
                     trash_path = os.path.join("/Volumes", vol, ".Trashes")
@@ -89,10 +120,8 @@ class API:
                 print("(CMD) purge eseguito (senza sudo)")
             except Exception as e:
                 print(f"[INFO] purge non eseguito: {e}")
-
         msg = f"{text.capitalize()} cleared: {removed_count} items removed"
         print(msg)
-
         try:
             if self.window:
                 execfu = f"notification('{msg}', 'bg-teal-600')"
@@ -115,39 +144,35 @@ class API:
                 memory = psutil.virtual_memory().percent
                 disk = psutil.disk_usage("/").percent
                 temp = self.get_cpu_temp()
-
                 data = {
                     "cpu": cpu,
                     "memory": memory,
                     "disk": disk,
                     "temperature": temp if temp is not None else "N/A"
                 }
-
                 js = f"updateVitals({json.dumps(data)})"
-                window.evaluate_js(js)
+                try:
+                    window.evaluate_js(js)
+                except Exception as e:
+                    pass
             except Exception as e:
                 print(f"[Monitor] {e}")
-
             time.sleep(2)  # update every 2 seconds
 
 
 if __name__ == "__main__":
     api = API()
-    html_path = os.path.abspath("index.html")
+    html_path = os.path.join(os.path.dirname(__file__), "index.html")
 
     window = webview.create_window(
         "Cleaner",
         f"file://{html_path}",
         js_api=api,
-        width=800,
-        height=600,
+        width=960,
+        height=720,
         resizable=False
     )
 
-    # API can reach the window for notifications
     api.window = window
-
-    # Start monitor
     threading.Thread(target=api.monitor_system, args=(window,), daemon=True).start()
-
     webview.start(debug=False)
