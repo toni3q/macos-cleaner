@@ -7,12 +7,20 @@ import os, sys
 import shutil
 import subprocess
 
+#python -m app.main => top level folder as package root automatically
+#python sets the working path including the file directory and the standard library locations
+#so we need a line of code that tells python to get out of this folder and search in the others
+#so this line adds the bridge folder to my python path and i can import stuff from it:
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from bridge.antivirus_bridge import stream_scan
 
+#this works as a bridge between python and javascript
+#when we run await window.pywebview.api.clearPath("x") pywebview looks for a python method in the API class 
 class API:
     def __init__(self):
-        self.window = None
+        self.window = None #just a variable named window set to None (for this moment)
+        self._scan_thread = None
+        self._scan_stop_event = None
 
     def start_scan(self):
         try:
@@ -21,7 +29,28 @@ class API:
         except Exception as e:
             print("[WARN] evaluate_js(startScanUI) failed:", e)
 
-        threading.Thread(target=self._run_scan, daemon=True).start()
+        # if a scan is already running, ignore
+        if self._scan_thread and self._scan_thread.is_alive():
+            print("[INFO] scan already running")
+            return
+
+        # create a stop event the thread will watch
+        self._scan_stop_event = threading.Event()
+        self._scan_thread = threading.Thread(target=self._run_scan, daemon=True)
+        self._scan_thread.start()
+
+    def stop_scan(self):
+        """Signal a running scan to stop. The scanning thread should check the stop event."""
+        try:
+            if self._scan_stop_event:
+                self._scan_stop_event.set()
+                # wait a short time for thread to acknowledge
+                if self._scan_thread:
+                    self._scan_thread.join(timeout=2)
+            else:
+                print("[INFO] no active scan to stop")
+        except Exception as e:
+            print("[WARN] stop_scan failed:", e)
 
     def _run_scan(self):
         def handle_progress(line):
@@ -41,10 +70,14 @@ class API:
                 elif line.startswith("#DONE"):
                     if self.window:
                         self.window.evaluate_js("finishScanUI()")
+                elif line.startswith("#INTERRUPTED"):
+                    if self.window:
+                        self.window.evaluate_js("finishScanUI()")
+                        self.window.evaluate_js("(function(){ const s = document.getElementById('status'); if(s) s.textContent='Scan interrupted.'; })()")
             except Exception as e:
                 print("[Monitor handler] exception:", e)
 
-        stream_scan(os.path.expanduser("~"), handle_progress)
+        stream_scan(os.path.expanduser("~"), handle_progress, stop_event=self._scan_stop_event)
 
     def clearPath(self, text: str):
         home = os.path.expanduser("~")
@@ -160,10 +193,17 @@ class API:
             time.sleep(2)  # update every 2 seconds
 
 
+
+#__name__ is like a built in variable in python, so its value is automatically set to "__main__"
+#but if you import that file into another file, not running it directly, python sets it to "app.main"
+#we are protecting our app from auto-starting itself every time it’s imported somewhere
+#because otherwise it would immediately start our GUI.
 if __name__ == "__main__":
+    #self.window = None (no link to UI)
     api = API()
     html_path = os.path.join(os.path.dirname(__file__), "index.html")
 
+    #we are just creating our pywebview window
     window = webview.create_window(
         "Cleaner",
         f"file://{html_path}",
@@ -173,6 +213,16 @@ if __name__ == "__main__":
         resizable=False
     )
 
+    #now the API can access and control our front-end
+    #so from now we could run self.window.evaluate_js("something()")
+    #and it would automatically run that function in the window we created before
     api.window = window
     threading.Thread(target=api.monitor_system, args=(window,), daemon=True).start()
     webview.start(debug=False)
+
+
+
+    # IGNORE
+    # python3 -m venv .venv
+    # source .venv/bin/activate
+    # pip install psutil pywebview

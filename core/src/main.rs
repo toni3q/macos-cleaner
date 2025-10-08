@@ -1,3 +1,5 @@
+//the antivirus engine in currently not functional: it's just scanning files for now.
+//we achieved a nice result by obtaining a fast scanner which will be used on our real antivirus system.
 use std::fs;
 use std::path::Path;
 use sha2::{Sha256, Digest};

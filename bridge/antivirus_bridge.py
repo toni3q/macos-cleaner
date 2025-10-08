@@ -3,12 +3,7 @@ import sys
 import time
 import threading
 
-def stream_scan(path, handle_progress):
-    """
-    Simulates an antivirus directory scan and streams progress lines to the callback.
-    Replace the fake scanning part later with real Rust bridge logic.
-    """
-
+def stream_scan(path, handle_progress, stop_event=None):
     # Collect all files first
     all_files = []
     for root, dirs, files in os.walk(path):
@@ -20,6 +15,11 @@ def stream_scan(path, handle_progress):
 
     count = 0
     for file_path in all_files:
+        # check for cancellation
+        if stop_event is not None and stop_event.is_set():
+            handle_progress("#INTERRUPTED")
+            return
+
         count += 1
         handle_progress(f"#PROGRESS {count} {file_path}")
         time.sleep(0.01)  # simulate scan delay

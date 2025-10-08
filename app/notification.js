@@ -18,12 +18,12 @@ function notification(message = '', bgcolor = 'bg-blue-500/80') {
     overlay.appendChild(box);
     document.body.appendChild(overlay);
 
-    // Fade in
+    //fade in antimation
     requestAnimationFrame(() => {
         overlay.classList.replace('opacity-0', 'opacity-100');
     });
 
-    // Fade out after 3s
+    //fade out after 3s animation
     setTimeout(() => {
         overlay.classList.replace('opacity-100', 'opacity-0');
         setTimeout(() => overlay.remove(), 300);

@@ -1,4 +1,4 @@
-// --- Wait until pywebview API is available before binding events ---
+//waits until pywebview API is available before binding events
 function waitForAPI(callback) {
     if (window.pywebview && window.pywebview.api) {
         callback();
@@ -8,25 +8,18 @@ function waitForAPI(callback) {
 }
 
 waitForAPI(() => {
-    // Safe DOM binding
+    //safe DOM binding
     const bindSafe = () => {
         const $ = id => document.getElementById(id);
 
         const btnCache = $("btnCache");
         const btnLogs = $("btnLogs");
-        const btnDownload = $("btnDownload"); // fixed typo (was btnDonwload)
+        const btnDownload = $("btnDownload");
         const btnScan = $("btnScan");
 
-        if (btnCache) {
-            btnCache.addEventListener("click", async () => {
-            console.log("Clear cache clicked");
-                try {
-                    await window.pywebview.api.clearPath("cache");
-                } catch (e) {
-                    console.error("clearPath(cache) failed:", e);
-                }
-            });
-        }
+        // scan button will be wired to start/stop logic
+        // existing click handler replaced by setScanButton wiring below
+        // ...existing code...
 
         if (btnLogs) {
             btnLogs.addEventListener("click", async () => {
@@ -134,4 +127,99 @@ function finishScanUI() {
     const bar = document.getElementById("progress-bar");
     if (bar) bar.style.width = "100%";
     if (statusEl) statusEl.textContent = "Scan complete!";
+}
+
+// ---------------- Scan control helpers ----------------
+let isScanning = false;
+
+function setScanButton(scanning) {
+    const btnScan = document.getElementById("btnScan");
+    if (!btnScan) return;
+    // remove existing listeners by cloning the node
+    const newBtn = btnScan.cloneNode(true);
+    btnScan.parentNode.replaceChild(newBtn, btnScan);
+
+    if (scanning) {
+        newBtn.textContent = "Stop";
+        newBtn.classList.remove("bg-rose-600");
+        newBtn.classList.add("bg-rose-600");
+        newBtn.addEventListener("click", stopScan);
+    } else {
+        newBtn.textContent = "Start";
+        newBtn.classList.remove("bg-zinc-600");
+        newBtn.classList.add("bg-rose-600");
+        newBtn.addEventListener("click", startScan);
+    }
+}
+
+async function startScan() {
+    if (isScanning) return;
+    isScanning = true;
+    setScanButton(true);
+    startScanUI();
+    try {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.start_scan) {
+            await window.pywebview.api.start_scan();
+        } else {
+            console.warn('start_scan API not available; simulating scan for UI');
+            // simulate a brief scan to demonstrate UI
+            simulateScan();
+        }
+    } catch (e) {
+        console.error("start_scan failed:", e);
+        isScanning = false;
+        setScanButton(false);
+        const statusEl = document.getElementById("status");
+        if (statusEl) statusEl.textContent = "Scan failed to start.";
+    }
+}
+
+async function stopScan() {
+    if (!isScanning) return;
+    try {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.stop_scan) {
+            await window.pywebview.api.stop_scan();
+        } else {
+            console.warn('stop_scan API not available; stopping simulated scan');
+            // stopping simulation
+            stopSimulation();
+        }
+        const statusEl = document.getElementById("status");
+        if (statusEl) statusEl.textContent = "Scan interrupted.";
+    } catch (e) {
+        console.error("stop_scan failed:", e);
+    }
+    isScanning = false;
+    setScanButton(false);
+}
+
+// wire initial state after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+    setScanButton(false);
+});
+
+// --- Simulation helpers (used only when backend API isn't available) ---
+let __simInterval = null;
+function simulateScan() {
+    let i = 0;
+    const totalSim = 20;
+    updateTotal(totalSim);
+    __simInterval = setInterval(() => {
+        i++;
+        updateProgress(i, `file_${i}.txt`);
+        if (i >= totalSim) {
+            clearInterval(__simInterval);
+            __simInterval = null;
+            finishScanUI();
+            isScanning = false;
+            setScanButton(false);
+        }
+    }, 200);
+}
+
+function stopSimulation() {
+    if (__simInterval) {
+        clearInterval(__simInterval);
+        __simInterval = null;
+    }
 }
